@@ -8,43 +8,69 @@
              Title="GroceryListItemsView">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="Wijzig kleur" Command="{Binding ChangeColorCommand}" IconImageSource="{FontImage Glyph='&#xf30c;', Color=Black, Size=22}" />
-        <ToolbarItem Text="Deel boodschappenlijst" Command="{Binding ShareGroceryListCommand}" IconImageSource="{FontImage Glyph='&#xf30c;', Color=Black, Size=22}" />
+        <ToolbarItem Text="Wijzig kleur"
+                     Command="{Binding ChangeColorCommand}"
+                     IconImageSource="{FontImage Glyph='&#xf30c;', Color=Black, Size=22}" />
+        <ToolbarItem Text="Deel boodschappenlijst"
+                     Command="{Binding ShareGroceryListCommand}"
+                     IconImageSource="{FontImage Glyph='&#xf30c;', Color=Black, Size=22}" />
     </ContentPage.ToolbarItems>
-    
+
     <Shell.TitleView>
         <Grid>
-            <Label Text="{Binding GroceryList.Name}" FontSize="Large" HorizontalOptions="Center" VerticalOptions="Center" />
+            <Label Text="{Binding GroceryList.Name}"
+                   FontSize="Large"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center" />
         </Grid>
     </Shell.TitleView>
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="4*"/>
-            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="4*" />
+            <ColumnDefinition Width="2*" />
         </Grid.ColumnDefinitions>
-        <Border Grid.Column="0" Stroke="#C49B33" StrokeThickness="4" Padding="10" Margin="10" HorizontalOptions="Center">
-            <CollectionView ItemsSource="{Binding MyGroceryListItems}" Margin="20" HorizontalOptions="Center" EmptyView="De boodschappenlijst is nog leeg. Voeg eerst boodschappen toe!">
+
+        <!-- Linker kolom: huidige boodschappenlijst -->
+        <Border Grid.Column="0"
+                Stroke="#C49B33"
+                StrokeThickness="4"
+                Padding="10"
+                Margin="10"
+                HorizontalOptions="Center">
+            <CollectionView ItemsSource="{Binding MyGroceryListItems}"
+                            Margin="20"
+                            HorizontalOptions="Center"
+                            EmptyView="De boodschappenlijst is nog leeg. Voeg eerst boodschappen toe!">
                 <CollectionView.ItemsLayout>
                     <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
                 </CollectionView.ItemsLayout>
-
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="m:GroceryListItem">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="4*"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="20"/>
-                                <ColumnDefinition Width="20"/>
+                                <ColumnDefinition Width="4*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="20" />
+                                <ColumnDefinition Width="20" />
                             </Grid.ColumnDefinitions>
-                            <Label Grid.Column="0" Text="{Binding Product.Name}" VerticalOptions="Center"/>
-                            <Label Grid.Column="1" Text="{Binding Amount}" VerticalOptions="Center" HorizontalOptions="End" Margin="0,0,10,0"/>
+                            <Label Grid.Column="0"
+                                   Text="{Binding Product.Name}"
+                                   VerticalOptions="Center" />
+                            <Label Grid.Column="1"
+                                   Text="{Binding Amount}"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="End"
+                                   Margin="0,0,10,0" />
                             <Grid Grid.Column="2">
-                                <Image Source="plus.png" WidthRequest="15" HeightRequest="15"/>
+                                <Image Source="plus.png"
+                                       WidthRequest="15"
+                                       HeightRequest="15" />
                             </Grid>
                             <Grid Grid.Column="3">
-                                <Image Source="min.png" WidthRequest="15" HeightRequest="15"/>
+                                <Image Source="min.png"
+                                       WidthRequest="15"
+                                       HeightRequest="15" />
                             </Grid>
                         </Grid>
                     </DataTemplate>
@@ -52,12 +78,33 @@
             </CollectionView>
         </Border>
 
-        <Border Grid.Row="1" Grid.Column="1" Stroke="#C49B33" StrokeThickness="4" Padding="5" Margin="5" HorizontalOptions="Center">
+        <!-- Rechter kolom: zoek/filter + beschikbare producten -->
+        <Border Grid.Column="1"
+                Stroke="#C49B33"
+                StrokeThickness="4"
+                Padding="5"
+                Margin="5"
+                HorizontalOptions="Center">
             <StackLayout>
-                <CollectionView ItemsSource="{Binding AvailableProducts}" Margin="5" WidthRequest="300" HorizontalOptions="Start"
-                    SelectionMode="Single"
-                    SelectionChangedCommand="{Binding AddProductCommand}"
-                    SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}">
+
+                <SearchBar Placeholder="Zoek product..."
+                           Text="{Binding SearchText}"
+                           SearchCommand="{Binding SearchCommand}"
+                           SearchCommandParameter="{Binding Text, Source={RelativeSource Self}}"
+                           Margin="5" />
+
+                <Picker Title="Sorteer op"
+                        ItemsSource="{Binding SortOptions}"
+                        SelectedItem="{Binding SelectedSortOption}"
+                        Margin="5" />
+
+                <CollectionView ItemsSource="{Binding AvailableProducts}"
+                                Margin="5"
+                                WidthRequest="300"
+                                HorizontalOptions="Start"
+                                SelectionMode="Single"
+                                SelectionChangedCommand="{Binding AddProductCommand}"
+                                SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}">
                     <CollectionView.ItemsLayout>
                         <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
                     </CollectionView.ItemsLayout>
@@ -65,24 +112,41 @@
                         <DataTemplate x:DataType="m:Product">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="3*"/>
-                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="3*" />
+                                    <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <Label Grid.Column="0" Text="{Binding Name}" VerticalOptions="Center"/>
-                                <Label Grid.Column="1" Text="{Binding Stock}" VerticalOptions="Center" HorizontalOptions="End" Margin="0,0,10,0"/>
+                                <Label Grid.Column="0"
+                                       Text="{Binding Name}"
+                                       VerticalOptions="Center" />
+                                <Label Grid.Column="1"
+                                       Text="{Binding Stock}"
+                                       VerticalOptions="Center"
+                                       HorizontalOptions="End"
+                                       Margin="0,0,10,0" />
                             </Grid>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
                     <CollectionView.EmptyView>
                         <ContentView>
-                            <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center">
-                                <Label Text="Er zijn geen producten meer om toe te voegen" FontAttributes="Bold" HorizontalTextAlignment="Center"/>
+                            <VerticalStackLayout HorizontalOptions="Center"
+                                                 VerticalOptions="Center">
+                                <Label Text="Er zijn geen producten meer om toe te voegen"
+                                       FontAttributes="Bold"
+                                       HorizontalTextAlignment="Center" />
                             </VerticalStackLayout>
                         </ContentView>
                     </CollectionView.EmptyView>
                 </CollectionView>
+
             </StackLayout>
         </Border>
-        <Label Grid.Row="0" Grid.Column="0" HorizontalOptions="Center" x:Name="Message" Text="{Binding MyMessage}" TextColor="Red" Margin="30,0,0,10"/>
+
+        <!-- Bericht (bijv. foutmelding) -->
+        <Label Grid.Column="0"
+               HorizontalOptions="Center"
+               x:Name="Message"
+               Text="{Binding MyMessage}"
+               TextColor="Red"
+               Margin="30,0,0,10" />
     </Grid>
 </ContentPage>
