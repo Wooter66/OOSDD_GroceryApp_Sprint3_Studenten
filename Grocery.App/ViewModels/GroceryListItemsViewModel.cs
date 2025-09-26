@@ -6,6 +6,7 @@ using Grocery.Core.Interfaces.Services;
 using Grocery.Core.Models;
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using System.Linq;
 
 namespace Grocery.App.ViewModels
 {
@@ -15,9 +16,22 @@ namespace Grocery.App.ViewModels
         private readonly IGroceryListItemsService _groceryListItemsService;
         private readonly IProductService _productService;
         private readonly IFileSaverService _fileSaverService;
-        
-        public ObservableCollection<GroceryListItem> MyGroceryListItems { get; set; } = [];
-        public ObservableCollection<Product> AvailableProducts { get; set; } = [];
+
+        private List<Product> _allProducts = new();
+
+        public ObservableCollection<GroceryListItem> MyGroceryListItems { get; set; } = new();
+        public ObservableCollection<Product> AvailableProducts { get; set; } = new();
+
+        [ObservableProperty]
+        private string searchText = string.Empty;
+
+        public ObservableCollection<string> SortOptions { get; } =
+            new ObservableCollection<string> { "A - Z", "Z - A", "Voorraad Oplopend", "Voorraad Aflopend" };
+
+        [ObservableProperty]
+        private string selectedSortOption = "A - Z";
+
+        public IRelayCommand<string> SearchCommand { get; }
 
         [ObservableProperty]
         GroceryList groceryList = new(0, "None", DateOnly.MinValue, "", 0);
@@ -29,6 +43,8 @@ namespace Grocery.App.ViewModels
             _groceryListItemsService = groceryListItemsService;
             _productService = productService;
             _fileSaverService = fileSaverService;
+
+            SearchCommand = new RelayCommand<string>(OnSearch);
             Load(groceryList.Id);
         }
 
@@ -41,10 +57,55 @@ namespace Grocery.App.ViewModels
 
         private void GetAvailableProducts()
         {
+            _allProducts = _productService.GetAll()
+                .Where(p => MyGroceryListItems.All(g => g.ProductId != p.Id) && p.Stock > 0)
+                .ToList();
+
+            ApplyFiltersAndSort();
+        }
+
+        private void OnSearch(string searchText)
+        {
+            SearchText = searchText ?? string.Empty;
+            ApplyFiltersAndSort();
+        }
+
+        partial void OnSelectedSortOptionChanged(string value)
+        {
+            ApplyFiltersAndSort();
+        }
+
+        private void ApplyFiltersAndSort()
+        {
+            IEnumerable<Product> filteredProducts = _allProducts;
+
+            if (!string.IsNullOrWhiteSpace(SearchText))
+            {
+                filteredProducts = filteredProducts
+                    .Where(p => p.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+            }
+
+            switch (SelectedSortOption)
+            {
+                case "A - Z":
+                    filteredProducts = filteredProducts.OrderBy(p => p.Name);
+                    break;
+                case "Z - A":
+                    filteredProducts = filteredProducts.OrderByDescending(p => p.Name);
+                    break;
+                case "Voorraad Oplopend":
+                    filteredProducts = filteredProducts.OrderBy(p => p.Stock);
+                    break;
+                case "Voorraad Aflopend":
+                    filteredProducts = filteredProducts.OrderByDescending(p => p.Stock);
+                    break;
+            }
+
             AvailableProducts.Clear();
-            foreach (Product p in _productService.GetAll())
-                if (MyGroceryListItems.FirstOrDefault(g => g.ProductId == p.Id) == null  && p.Stock > 0)
-                    AvailableProducts.Add(p);
+            foreach (var product in filteredProducts)
+            {
+                AvailableProducts.Add(product);
+            }
         }
 
         partial void OnGroceryListChanged(GroceryList value)
@@ -85,6 +146,5 @@ namespace Grocery.App.ViewModels
                 await Toast.Make($"Opslaan mislukt: {ex.Message}").Show(cancellationToken);
             }
         }
-
     }
 }
